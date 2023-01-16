@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-
-# Copyright 2019 The Tekton Authors
+#
+# Copyright 2020 The Tekton Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,29 +14,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Configure the number of parallel tests running at the same time, start from 0
-MAX_NUMBERS_OF_PARALLEL_TASKS=7 # => 8
+set -x
+set -e
 
-export RELEASE_YAML=https://github.com/tektoncd/pipeline/releases/download/v0.40.0/release.yaml
-
-source $(dirname $0)/../vendor/github.com/tektoncd/plumbing/scripts/e2e-tests.sh
+cd $(git rev-parse --show-toplevel)
 source $(dirname $0)/e2e-common.sh
 
 TMPF=$(mktemp /tmp/.mm.XXXXXX)
-clean() { rm -f ${TMPF}; }
+clean() { rm -f ${TMPF} ;}
 trap clean EXIT
 
+if [[ -z ${@} || ${1} == "-h" ]];then
+    echo_local_test_helper_info
+    exit 0
+fi
 
-# Install the latest Tekton CRDs.
-install_pipeline_crd
+TASK=${1}
+Date=${2}
 
-set -ex
-set -o pipefail
+taskdir=task/${TASK}
 
-all_tests=$(echo task/*/*/tests)
+kubectl get ns ${TASK}-${Date//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${Date//./-}
 
-test_yaml_can_install "${all_tests}"
+if [[ ! -d ${taskdir}/tests ]];then
+    echo "No 'tests' directory is located in ${taskdir}"
+    exit 1
+fi
 
-test_tasks "${all_tests}"
+test_task_creation task/${TASK}/tests
 
-success
+echo 'Success'
