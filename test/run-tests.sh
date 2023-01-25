@@ -29,6 +29,11 @@ if [[ -z ${@} || ${1} == "-h" ]];then
     exit 0
 fi
 
+TEST_RUN_NIGHTLY_TESTS=nightly
+if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
+    git fetch --tags
+fi
+
 TASK=${1}
 VERSION="dev"
 

@@ -68,7 +68,8 @@ function test_yaml_can_install() {
         else
             for version_tag in $(git tag) 
             do
-                $(git checkout tag) 
+                git checkout "tags/${version_tag}"
+
                 # in case a task is being removed then it's directory
                 # doesn't exists, so skip the test for YAML
                 [ ! -d "${runtest%%/*}/${testname}" ] && continue
@@ -158,7 +159,7 @@ function test_task_creation() {
             $(git fetch --tags)
             for version_tag in $(git tag) 
             do
-                $(git checkout tag) 
+                git checkout "tags/${version_tag}"
 
                 # replace . with - in version as not supported in namespace name
                 local version="$( echo $version_tag | tr '.' '-' )"
