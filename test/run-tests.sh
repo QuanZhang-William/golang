@@ -20,31 +20,55 @@ set -e
 cd $(git rev-parse --show-toplevel)
 source $(dirname $0)/../vendor/github.com/QuanZhang-William/plumbing/scripts/verified-catalog-e2e-common.sh
 
-TMPF=$(mktemp /tmp/.mm.XXXXXX)
-clean() { rm -f ${TMPF} ;}
-trap clean EXIT
-
 if [[ -z ${@} || ${1} == "-h" ]];then
     echo_local_test_helper_info
     exit 0
 fi
 
-TEST_RUN_NIGHTLY_TESTS=nightly
-if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
-    git fetch --tags
-fi
-
 TASK=${1}
-VERSION="dev"
+
+TMPD=$(mktemp -d /tmp/.mm.XXXXXX)
+clean() { rm -f -r ${TMPD} ;}
+trap clean EXIT
+
+TEST_RUN_NIGHTLY_TESTS=0
 
 taskdir=task/${TASK}
 
-kubectl get ns ${TASK}-${VERSION//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${VERSION//./-}
+# folder structure:
+# /tmp/xxx/task/{version}/golang-build/...
+if [[ ${1} == "--nightly" ]] && TEST_RUN_NIGHTLY_TESTS=1
+if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
+    git fetch --tags
+    cur_branch=$(git rev-parse --abbrev-ref HEAD)
 
-if [[ ! -d ${taskdir}/tests ]];then
-    echo "No 'tests' directory is located in ${taskdir}"
-    exit 1
+    for version_tag in $(git tag) 
+    do
+        git checkout "tags/${version_tag}"
+
+        if [[ ! -d ${taskdir}/tests ]];then
+            echo "No 'tests' directory is located in ${taskdir}"
+            exit 1
+        fi   
+
+        local version="$( echo $version_tag | tr '.' '-' )"
+        kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
+
+        cp_dir=$(${TMPD}/task/${version}/${TASK})
+        mkdir ${cp_dir}
+        cp -r ./task/${TASK} ${cp_dir}
+    done
+    git checkout ${cur_branch}
+else 
+    local version="dev"
+    kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
+
+    cp_dir=$(${TMPD}/task/${version}/${TASK})
+    mkdir ${cp_dir}
+    cp -r ./task/${TASK} ${cp_dir}
 fi
+
+cd ${TMPD}
 
 test_yaml_can_install task/${TASK}/tests
 

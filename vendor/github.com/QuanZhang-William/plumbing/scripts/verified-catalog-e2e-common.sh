@@ -56,30 +56,14 @@ function test_yaml_can_install() {
         local testname=${runtestdir%%/*}
         runtest=${runtest//tests}
 
-        if [[ -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
-            # in case a task is being removed then it's directory
-            # doesn't exists, so skip the test for YAML
-            [ ! -d "${runtest%%/*}/${testname}" ] && continue
+        # in case a task is being removed then it's directory
+        # doesn't exists, so skip the test for YAML
+        [ ! -d "${runtest%%/*}/${testname}" ] && continue
 
-            input="${runtest}${testname}.yaml"
+        input="${runtest}${testname}.yaml"
 
-            echo "Checking ${testname}"
-            ${KUBECTL_CMD} -n ${ns} apply -f <(sed "s/namespace:.*/namespace: task-ns/" "${input}")
-        else
-            for version_tag in $(git tag) 
-            do
-                git checkout "tags/${version_tag}"
-
-                # in case a task is being removed then it's directory
-                # doesn't exists, so skip the test for YAML
-                [ ! -d "${runtest%%/*}/${testname}" ] && continue
-
-                input="${runtest}${testname}.yaml"
-
-                echo "Checking ${testname}"
-                ${KUBECTL_CMD} -n ${ns} apply -f <(sed "s/namespace:.*/namespace: task-ns/" "${input}")
-            done 
-        fi
+        echo "Checking ${testname}"
+        ${KUBECTL_CMD} -n ${ns} apply -f <(sed "s/namespace:.*/namespace: task-ns/" "${input}")
     done
 }
 
@@ -142,35 +126,16 @@ function test_task_creation() {
         local testname=${runtestdir%%/*}
         # remove /tests from end
         local taskdir=${runtest%/*}
+        local version="dev"
+        local tns="${testname}-${version}"
 
-        if [[ -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
-            local version="dev"
-            local tns="${testname}-${version}"
+        # check whether test folder exists or not inside task dir
+        # if not then run the tests for next task (if any)
+        check_test_folder_exist ${runtest} || continue
 
-            # check whether test folder exists or not inside task dir
-            # if not then run the tests for next task (if any)
-            
-            check_test_folder_exist ${runtest} || continue
+        create_task "${tns}" "${taskdir}"
 
-            create_task "${tns}" "${taskdir}"
-
-            task_to_wait_for["$testname/${version}"]="${tns}|$started" 
-        else
-            for version_tag in $(git tag) 
-            do
-                git checkout "tags/${version_tag}"
-
-                # replace . with - in version as not supported in namespace name
-                local version="$( echo $version_tag | tr '.' '-' )"
-                local tns="${testname}-${version}"
-
-                check_test_folder_exist ${runtest} || continue
-
-                create_task "${tns}" "${taskdir}"
-
-                task_to_wait_for["$testname/${version}"]="${tns}|$started" 
-            done
-        fi
+        task_to_wait_for["$testname/${version}"]="${tns}|$started" 
     done
 
     # I would refactor this to a function but bash limitation is too great, really need a rewrite the sooner
