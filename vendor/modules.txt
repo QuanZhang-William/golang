@@ -1,0 +1,3 @@
+# github.com/QuanZhang-William/plumbing v0.0.0-20230123213224-1d1749696158
+## explicit; go 1.13
+github.com/QuanZhang-William/plumbing/scripts
