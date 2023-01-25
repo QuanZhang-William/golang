@@ -48,6 +48,6 @@ fi
 
 test_yaml_can_install task/${TASK}/tests
 
-#test_task_creation task/${TASK}/tests
+test_task_creation task/${TASK}/tests
 
 echo 'Success'

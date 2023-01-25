@@ -156,7 +156,6 @@ function test_task_creation() {
 
             task_to_wait_for["$testname/${version}"]="${tns}|$started" 
         else
-            $(git fetch --tags)
             for version_tag in $(git tag) 
             do
                 git checkout "tags/${version_tag}"
@@ -227,7 +226,7 @@ function test_task_creation() {
 
             if [[ ${breakit} == True ]];then
                 unset task_to_wait_for[$testname]
-                [[ -z ${CATALOG_TEST_SKIP_CLEANUP} ]] && ${KUBECTL_CMD} delete ns ${target_ns} >/dev/null
+                #[[ -z ${CATALOG_TEST_SKIP_CLEANUP} ]] && ${KUBECTL_CMD} delete ns ${target_ns} >/dev/null
                 echo "${started}::$(date '+%Hh%M:%S') SUCCESS: ${testname} testrun has successfully executed" ;
             fi
 
