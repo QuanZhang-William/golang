@@ -126,7 +126,7 @@ function test_task_creation() {
         local testname=${runtestdir%%/*}
         # remove /tests from end
         local taskdir=${runtest%/*}
-        local version="dev"
+        local version=$(basename $(basename $(dirname $runtest)))
         local tns="${testname}-${version}"
 
         # check whether test folder exists or not inside task dir
