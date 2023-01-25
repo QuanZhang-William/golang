@@ -164,7 +164,7 @@ function test_task_creation() {
                 local version="$( echo $version_tag | tr '.' '-' )"
                 local tns="${testname}-${version}"
 
-                check_test_folder_exist || continue
+                check_test_folder_exist ${runtest} || continue
 
                 create_task "${tns}" "${taskdir}"
 
