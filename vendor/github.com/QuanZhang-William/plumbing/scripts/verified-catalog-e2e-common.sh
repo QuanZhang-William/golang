@@ -61,10 +61,10 @@ function test_yaml_can_install() {
             # doesn't exists, so skip the test for YAML
             [ ! -d "${runtest%%/*}/${testname}" ] && continue
 
-            runtest="${runtest}${testname}.yaml"
+            input="${runtest}${testname}.yaml"
 
             echo "Checking ${testname}"
-            ${KUBECTL_CMD} -n ${ns} apply -f <(sed "s/namespace:.*/namespace: task-ns/" "${runtest}")
+            ${KUBECTL_CMD} -n ${ns} apply -f <(sed "s/namespace:.*/namespace: task-ns/" "${input}")
         else
             for version_tag in $(git tag) 
             do
@@ -74,10 +74,10 @@ function test_yaml_can_install() {
                 # doesn't exists, so skip the test for YAML
                 [ ! -d "${runtest%%/*}/${testname}" ] && continue
 
-                runtest="${runtest}${testname}.yaml"
+                input="${runtest}${testname}.yaml"
 
                 echo "Checking ${testname}"
-                ${KUBECTL_CMD} -n ${ns} apply -f <(sed "s/namespace:.*/namespace: task-ns/" "${runtest}")
+                ${KUBECTL_CMD} -n ${ns} apply -f <(sed "s/namespace:.*/namespace: task-ns/" "${input}")
             done 
         fi
     done
