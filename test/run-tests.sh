@@ -27,17 +27,22 @@ fi
 
 TASK=${1}
 
+TMPF=$(mktemp /tmp/.mm.XXXXXX)
+clean() { rm -f ${TMPF}; }
+trap clean EXIT
+
 TMPD=$(mktemp -d /tmp/.mm.XXXXXX)
 clean() { rm -f -r ${TMPD} ;}
 trap clean EXIT
 
-TEST_RUN_NIGHTLY_TESTS=0
+TEST_RUN_NIGHTLY_TESTS=""
 
-taskdir=task/${TASK}
+taskdir="task/${TASK}"
 
 # folder structure:
 # /tmp/xxx/task/{version}/golang-build/...
-if [[ ${1} == "--nightly" ]] && TEST_RUN_NIGHTLY_TESTS=1
+[[ ${2} == "--nightly" ]] && TEST_RUN_NIGHTLY_TESTS=1
+
 if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
     git fetch --tags
     cur_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -51,27 +56,27 @@ if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
             exit 1
         fi   
 
-        local version="$( echo $version_tag | tr '.' '-' )"
+        version="$( echo $version_tag | tr '.' '-' )"
         kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
 
-        cp_dir=$(${TMPD}/task/${version}/${TASK})
-        mkdir ${cp_dir}
-        cp -r ./task/${TASK} ${cp_dir}
+        cp_dir=${TMPD}/task/${TASK}/${version}
+        mkdir -p ${cp_dir}
+        cp -r ./task/${TASK}/* ${cp_dir}
     done
     git checkout ${cur_branch}
 else 
-    local version="dev"
+    version="dev"
     kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
 
-    cp_dir=$(${TMPD}/task/${version}/${TASK})
-    mkdir ${cp_dir}
-    cp -r ./task/${TASK} ${cp_dir}
+    cp_dir=${TMPD}/task/${TASK}/${version}
+    mkdir -p ${cp_dir}
+    cp -r ./task/${TASK}/* ${cp_dir}
 fi
 
 cd ${TMPD}
 
-test_yaml_can_install task/${TASK}/tests
+test_yaml_can_install task/${TASK}/*/tests
 
-test_task_creation task/${TASK}/tests
+test_task_creation task/${TASK}/*/tests
 
 echo 'Success'
