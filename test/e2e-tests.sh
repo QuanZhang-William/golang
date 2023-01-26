@@ -27,16 +27,50 @@ TMPF=$(mktemp /tmp/.mm.XXXXXX)
 clean() { rm -f ${TMPF}; }
 trap clean EXIT
 
+TMPD=$(mktemp -d /tmp/.mm.XXXXXX)
+clean() { rm -f -r ${TMPD} ;}
+trap clean EXIT
+
 # Install Tekton CRDs.
 install_pipeline_crd
 
 set -ex
 set -o pipefail
 
-all_tests=$(echo task/*/*/tests)
+if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
+    git fetch --tags
+    cur_branch=$(git rev-parse --abbrev-ref HEAD)
 
-test_yaml_can_install "${all_tests}"
+    for version_tag in $(git tag) 
+    do
+        git checkout "tags/${version_tag}"
 
-test_tasks "${all_tests}"
+        if [[ ! -d ${taskdir}/tests ]];then
+            echo "No 'tests' directory is located in ${taskdir}"
+            exit 1
+        fi   
+
+        version="$( echo $version_tag | tr '.' '-' )"
+        kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
+
+        cp_dir=${TMPD}/task/${TASK}/${version}
+        mkdir -p ${cp_dir}
+        cp -r ./task/${TASK}/* ${cp_dir}
+    done
+    git checkout ${cur_branch}
+else 
+    version="dev"
+    kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
+
+    cp_dir=${TMPD}/task/${TASK}/${version}
+    mkdir -p ${cp_dir}
+    cp -r ./task/${TASK}/* ${cp_dir}
+fi
+
+cd ${TMPD}
+
+test_yaml_can_install task/${TASK}/*/tests
+
+test_task_creation task/${TASK}/*/tests
 
 success
