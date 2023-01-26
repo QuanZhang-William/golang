@@ -37,6 +37,7 @@ trap clean EXIT
 set -ex
 set -o pipefail
 
+TEST_RUN_NIGHTLY_TESTS="1"
 if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
     git fetch --tags
     cur_branch=$(git rev-parse --abbrev-ref HEAD)
