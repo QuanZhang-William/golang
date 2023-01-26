@@ -20,7 +20,7 @@ MAX_NUMBERS_OF_PARALLEL_TASKS=7 # => 8
 # Define this variable if you want to run all tests and not just the modified one.
 TEST_RUN_NIGHTLY_TESTS=${TEST_RUN_NIGHTLY_TESTS:-""}
 
-source $(dirname $0)/../vendor/github.com/tektoncd/plumbing/scripts/e2e-tests.sh
+source $(dirname $0)/../vendor/github.com/QuanZhang-William/plumbing/scripts/e2e-tests.sh
 source $(dirname $0)/../vendor/github.com/QuanZhang-William/plumbing/scripts/verified-catalog-e2e-common.sh
 
 TMPF=$(mktemp /tmp/.mm.XXXXXX)
@@ -32,7 +32,7 @@ clean() { rm -f -r ${TMPD} ;}
 trap clean EXIT
 
 # Install Tekton CRDs.
-install_pipeline_crd
+#install_pipeline_crd
 
 set -ex
 set -o pipefail
@@ -45,32 +45,33 @@ if [[ ! -z ${TEST_RUN_NIGHTLY_TESTS} ]];then
     do
         git checkout "tags/${version_tag}"
 
-        if [[ ! -d ${taskdir}/tests ]];then
-            echo "No 'tests' directory is located in ${taskdir}"
-            exit 1
-        fi   
-
         version="$( echo $version_tag | tr '.' '-' )"
-        kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
+        resources=$(ls -d task/*)
 
-        cp_dir=${TMPD}/task/${TASK}/${version}
-        mkdir -p ${cp_dir}
-        cp -r ./task/${TASK}/* ${cp_dir}
+        for resource in ${resources};do
+            cp_dir=${TMPD}/${resource}/${version}
+            mkdir -p ${cp_dir}
+            cp -r ./${resource}/* ${cp_dir}
+        done
     done
     git checkout ${cur_branch}
 else 
     version="dev"
-    kubectl get ns ${TASK}-${version//./-} >/dev/null 2>/dev/null && kubectl delete ns ${TASK}-${version//./-}
+    resources=$(ls -d task/*)
 
-    cp_dir=${TMPD}/task/${TASK}/${version}
-    mkdir -p ${cp_dir}
-    cp -r ./task/${TASK}/* ${cp_dir}
+    for resource in ${resources};do
+        cp_dir=${TMPD}/${resource}/${version}
+        mkdir -p ${cp_dir}
+        cp -r ./${resource}/* ${cp_dir}
+    done
 fi
 
 cd ${TMPD}
 
-test_yaml_can_install task/${TASK}/*/tests
+all_tests=$(echo task/*/*/tests)
 
-test_task_creation task/${TASK}/*/tests
+test_yaml_can_install ${all_tests}
+
+test_task_creation ${all_tests}
 
 success
