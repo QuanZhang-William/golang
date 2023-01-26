@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: golang-build-pipeline-run-basic-2
+  name: golang-build-pipeline-run-basic-1
 spec:
   pipelineRef:
     name: golang-build-pipeline
@@ -26,7 +26,7 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: golang-build-pipeline-run-extra-flags-2
+  name: golang-build-pipeline-run-extra-flags-1
 spec:
   pipelineRef:
     name: golang-build-pipeline
