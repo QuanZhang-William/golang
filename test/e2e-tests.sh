@@ -73,6 +73,6 @@ all_tests=$(echo task/*/*/tests)
 
 test_yaml_can_install ${all_tests}
 
-test_task_creation ${all_tests}
+test_tasks ${all_tests}
 
 success
