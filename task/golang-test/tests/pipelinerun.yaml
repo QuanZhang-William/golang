@@ -1,10 +1,10 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: golang-build-pipeline-run-basic
+  name: golang-test-pipeline-run-basic
 spec:
   pipelineRef:
-    name: golang-build-pipeline
+    name: golang-test-pipeline
   params:
     - name: url
       value: https://github.com/golang/example
