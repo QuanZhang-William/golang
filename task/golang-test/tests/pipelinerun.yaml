@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: golang-test-pipeline-run-basic
+  name: golang-test-pipeline-run-basic-2
 spec:
   pipelineRef:
     name: golang-test-pipeline
